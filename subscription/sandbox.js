@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join, posix } from 'node:path';
+import { Sandbox } from '@vercel/sandbox';
 
 const sandboxName = 'printlab-chatgpt';
 let sourceFiles;
@@ -30,6 +31,7 @@ async function atStage(stage, callback) {
   catch (error) {
     throw Object.assign(new Error('The ChatGPT worker could not start.'), {
       stage,
+      detail: error?.code === 'ERR_REQUIRE_ESM' ? error.message.split('\n')[0] : undefined,
       code: error?.code ?? error?.name,
       status: error?.status ?? error?.response?.status,
     });
@@ -38,7 +40,6 @@ async function atStage(stage, callback) {
 
 export async function sandboxRequest(action, input) {
   const files = await atStage('read-source', sources);
-  const { Sandbox } = await atStage('load-sdk', () => import('@vercel/sandbox'));
   const sandbox = await atStage('open-sandbox', () => Sandbox.getOrCreate({
     name: sandboxName, persistent: true, resources: { vcpus: 1 },
     timeout: 10 * 60_000, keepLastSnapshots: { count: 1 },

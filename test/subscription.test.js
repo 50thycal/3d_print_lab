@@ -4,7 +4,7 @@ import { chmod, copyFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { handleSubscription } from '../api/subscription.js';
+import { handleSubscription } from '../subscription/access.js';
 import { bracket } from '../src/spec.js';
 
 const secret = 'this-is-a-fake-owner-code-for-tests';
