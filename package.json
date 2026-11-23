@@ -14,7 +14,7 @@
   "dependencies": {
     "manifold-3d": "3.2.1",
     "three": "0.180.0",
-    "@vercel/sandbox": "4.1.0"
+    "@vercel/sandbox": "4.0.0"
   },
   "devDependencies": {
     "vite": "6.4.1"
