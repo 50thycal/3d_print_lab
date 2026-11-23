@@ -1,0 +1,19 @@
+{
+  "name": "printlab-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "test": "node --test",
+    "build": "npm test && vite build"
+  },
+  "engines": { "node": ">=20.19" },
+  "dependencies": {
+    "manifold-3d": "3.2.1",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "vite": "6.4.1"
+  }
+}

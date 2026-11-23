@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f4ed">
+  <meta name="description" content="Turn a description or a reference photo into an editable mechanical model for 3D printing.">
+  <title>PrintLab AI</title>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span>PrintLab <span class="brand-ai">AI</span></div>
+      <button class="button outline" id="open-settings" type="button"><span class="status-dot" aria-hidden="true"></span>AI settings</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h1>Design a part</h1>
+      <p>Describe what you need or add a photo, then refine the model for printing.</p>
+    </section>
+
+    <div class="workspace">
+      <section class="panel design-panel" aria-labelledby="design-title">
+        <div class="design-heading"><h2 id="design-title">Design brief</h2><button class="link-button" id="new-design" type="button" hidden>New brief</button></div>
+        <form id="design-form">
+          <label for="description" id="description-label">What should it make?</label>
+          <textarea id="description" rows="5" maxlength="4000" placeholder="A bracket for a small shelf, with two screw holes 40 mm apart…"></textarea>
+
+          <label for="measurement">Known measurements <span>optional</span></label>
+          <input id="measurement" type="text" maxlength="500" placeholder="e.g. Base is 64 mm wide">
+          <p class="field-note">Add a measured dimension for scale. Include any hole spacing or clearances that need to fit.</p>
+
+          <div class="photo-header"><label for="photo">Reference photo <span>optional</span></label><button class="link-button" type="button" id="remove-photo" hidden>Remove</button></div>
+          <div id="photo-area">
+            <label class="upload" for="photo" id="photo-drop">
+              <span aria-hidden="true" class="upload-icon">↑</span>
+              <span><strong>Choose a photo</strong><small>JPEG, PNG, or WebP</small></span>
+            </label>
+            <img id="photo-preview" alt="Your reference photo" hidden>
+          </div>
+          <input id="photo" type="file" accept="image/*" class="visually-hidden">
+          <input id="camera" type="file" accept="image/*" capture="environment" class="visually-hidden">
+          <button type="button" class="link-button camera" id="take-photo">Take a photo</button>
+
+          <button type="submit" class="button primary generate" id="generate"><span id="generate-label">Generate model</span><span aria-hidden="true">↗</span></button>
+          <p class="status" role="status" id="form-status" hidden></p>
+          <div class="brief-footer">
+            <button type="button" class="link-button" id="load-sample">Try sample bracket</button>
+            <button type="button" class="link-button" id="open-bridge">Use ChatGPT</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel preview-panel" aria-labelledby="preview-title">
+        <div class="preview-header">
+          <div><h2 id="preview-title">3D preview</h2><p id="preview-name"></p></div>
+          <div class="view-actions" aria-label="View controls">
+            <button class="button outline compact" type="button" id="undo" disabled>Undo</button>
+            <button class="button outline compact" type="button" id="reset-view" disabled>Reset view</button>
+          </div>
+        </div>
+        <div class="viewport" id="viewport">
+          <div class="viewport-badge"><span aria-hidden="true"></span> MILLIMETERS</div>
+          <div class="viewport-message" id="viewer-message">Loading sample model…</div>
+          <div class="view-instructions">Drag to orbit · Scroll or pinch to zoom</div>
+        </div>
+        <div class="model-footer">
+          <div class="model-details">
+            <div id="model-dimensions">—</div>
+            <p id="model-check">Waiting for geometry</p>
+          </div>
+          <button class="button download" type="button" id="export-stl" disabled>Download STL <span aria-hidden="true">↓</span></button>
+        </div>
+        <div class="review" id="review" hidden>
+          <strong>Check the measurements</strong>
+          <p id="model-summary"></p>
+          <ul id="assumptions"></ul>
+          <label class="checkbox-label"><input id="confirm-dimensions" type="checkbox"> I’ve checked the estimated dimensions.</label>
+        </div>
+        <details class="features" id="features" hidden>
+          <summary><span>Edit features</span><span id="feature-count"></span></summary>
+          <div class="feature-list" id="feature-list"></div>
+          <p id="feature-status" class="status" role="status" hidden></p>
+          <div class="feature-actions">
+            <button class="button outline" type="button" id="apply-edits">Apply changes</button>
+            <button class="link-button" type="button" id="export-json">Download editable file</button>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="settings">
+    <form id="settings-form">
+      <div class="dialog-heading"><h2>AI settings</h2><button type="button" class="button outline compact" data-close="settings">Close</button></div>
+      <p>Connect your OpenAI API key for generation inside PrintLab. The key stays in this tab and requests are billed to your API account.</p>
+      <label for="api-key">OpenAI API key</label>
+      <input type="password" id="api-key" placeholder="sk-…" autocomplete="off" spellcheck="false" autocapitalize="off">
+      <p id="settings-error" class="status" role="status" hidden></p>
+      <div class="dialog-actions">
+        <button type="submit" class="button primary">Connect AI</button>
+        <button type="button" class="link-button" id="disconnect">Disconnect</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="bridge">
+    <div class="dialog-heading"><h2>Use ChatGPT</h2><button type="button" class="button outline compact" data-close="bridge">Close</button></div>
+    <p>Copy your design brief into ChatGPT and attach the same photo there. Paste the resulting JSON here to build and preview your part.</p>
+    <div class="bridge-actions">
+      <button type="button" class="button outline" id="copy-prompt">Copy design prompt</button>
+      <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open ChatGPT ↗</a>
+    </div>
+    <label for="import-text">Design JSON</label>
+    <textarea id="import-text" rows="5" spellcheck="false" placeholder="Paste the JSON from ChatGPT or an editable file…"></textarea>
+    <p id="bridge-status" class="status" role="status" hidden></p>
+    <div class="dialog-actions">
+      <button type="button" class="button primary" id="import-json">Preview imported design</button>
+    </div>
+  </dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
