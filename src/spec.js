@@ -71,6 +71,17 @@ export function validateDesign(value) {
   };
 }
 
+export function checkPhotoScale(design, { description, measurement, image, previous }) {
+  if (!image || measurement.trim() || /\d\s*(?:mm|cm|inches|inch|in\b|["″])/i.test(description)) return design;
+  // A revision can reuse the already established scale of the same part.
+  if (previous && !previous.needsReview) return design;
+  return {
+    ...design,
+    needsReview: true,
+    assumptions: design.assumptions.length ? design.assumptions : ['The photo does not establish the overall scale. Measure the part and check its dimensions.'],
+  };
+}
+
 export function designPrompt({ description, measurement, image, previous }) {
   return JSON.stringify({
     description: description || 'Recreate the primary object in the reference photo as a printable mechanical part.',

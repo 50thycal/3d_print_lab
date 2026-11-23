@@ -41,7 +41,7 @@
             <img id="photo-preview" alt="Your reference photo" hidden>
           </div>
           <input id="photo" type="file" accept="image/*" class="visually-hidden">
-          <input id="camera" type="file" accept="image/*" capture="environment" class="visually-hidden">
+          <input id="camera" tabindex="-1" type="file" accept="image/*" capture="environment" class="visually-hidden">
           <button type="button" class="link-button camera" id="take-photo">Take a photo</button>
 
           <button type="submit" class="button primary generate" id="generate"><span id="generate-label">Generate model</span><span aria-hidden="true">↗</span></button>

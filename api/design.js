@@ -1,4 +1,4 @@
-import { designInstructions, designPrompt, designSchema, validateDesign } from '../src/spec.js';
+import { checkPhotoScale, designInstructions, designPrompt, designSchema, validateDesign } from '../src/spec.js';
 
 export async function createDesign(body, authorization, send = fetch) {
   const key = authorization?.match(/^Bearer (sk-[\w-]{12,300})$/)?.[1];
@@ -43,7 +43,8 @@ export async function createDesign(body, authorization, send = fetch) {
     if (payload.status !== 'completed' || !message) {
       return [422, { error: 'The model could not complete that design. Try a simpler shape or add measurements.' }];
     }
-    return [200, { design: validateDesign(JSON.parse(message.text)) }];
+    const design = validateDesign(JSON.parse(message.text));
+    return [200, { design: checkPhotoScale(design, { description, measurement, image, previous: current }) }];
   } catch {
     return [502, { error: 'The AI response was unavailable or invalid. Try again with a shorter description.' }];
   }

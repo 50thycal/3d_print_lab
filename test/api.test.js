@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createDesign } from '../api/design.js';
-import { bracket, validateDesign } from '../src/spec.js';
+import { bracket, checkPhotoScale, validateDesign } from '../src/spec.js';
 
 const key = 'Bearer sk-example_key_0000';
 const photo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEUAAAD///+l2Z/dAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==';
@@ -49,4 +49,11 @@ test('handles a provider refusal without returning a design', async () => {
   }));
   assert.equal(status, 422);
   assert.match(payload.error, /could not complete/);
+});
+
+test('photo-only generation asks the user to confirm an unscaled result', () => {
+  const approximate = checkPhotoScale(bracket, { description: '', measurement: '', image: photo });
+  assert.equal(approximate.needsReview, true);
+  assert.match(approximate.assumptions[0], /scale/);
+  assert.equal(checkPhotoScale(bracket, { description: '64 mm wide', measurement: '', image: photo }).needsReview, false);
 });

@@ -1,6 +1,6 @@
 import wasmUrl from '@cad-wasm?url';
 import './style.css';
-import { axes, bracket, bracketDescription, portablePrompt, validateDesign } from './spec.js';
+import { axes, bracket, bracketDescription, checkPhotoScale, portablePrompt, validateDesign } from './spec.js';
 import { buildModel, encodeSTL } from './geometry.js';
 import { createViewer } from './viewer.js';
 
@@ -326,7 +326,7 @@ $('import-json').addEventListener('click', () => runAction($('bridge-status'), a
   const raw = $('import-text').value.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   let data;
   try { data = JSON.parse(raw); } catch { throw new Error('Paste the complete JSON design, then try again.'); }
-  await setModel(data, 'design');
+  await setModel(checkPhotoScale(validateDesign(data), currentInput()), 'design');
   $('bridge').close();
   $('import-text').value = '';
   afterGeneration();

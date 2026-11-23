@@ -59,7 +59,7 @@ textarea { resize: vertical; display: block; margin-bottom: 16px; line-height: 1
   min-height: 66px; margin: 0; cursor: pointer; background: #f8faf4; gap: 6px;
 }
 .upload:hover, .upload.dragging { background: #f0f5e3; }
-#photo-area:focus-within .upload { outline: 2px solid var(--focus); }
+#design-form:has(#photo:focus-visible) .upload { outline: 2px solid var(--focus); }
 .upload-icon { display: grid; place-items: center; background: #e9efdd; width: 33px; height: 33px; border-radius: 7px; font-size: 20px; }
 .upload strong { color: var(--text); font-size: 13px; font-weight: 720; }
 .upload small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }

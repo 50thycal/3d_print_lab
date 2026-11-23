@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url);
 const manifoldDirectory = dirname(require.resolve('manifold-3d'));
 
 export default defineConfig({
-  resolve: { alias: { '@cad-wasm': join(manifoldDirectory, 'manifold.wasm') } },
+  resolve: { alias: [{ find: /^@cad-wasm(?=\?|$)/, replacement: join(manifoldDirectory, 'manifold.wasm') }] },
   optimizeDeps: { exclude: ['manifold-3d'] },
   plugins: [{
     name: 'printlab-local-api',
