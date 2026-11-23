@@ -59,7 +59,7 @@ export async function handleSubscription(request, { secret, now = Math.floor(Dat
         ? { ...result.payload, available: true, owner: true } : result.payload,
     };
   } catch (error) {
-    console.warn('PrintLab subscription worker unavailable', { action, kind: error?.name, status: error?.response?.status, message: error?.message?.startsWith('The ChatGPT worker') ? error.message : undefined });
+    console.warn('PrintLab subscription worker unavailable', { action, stage: error?.stage, kind: error?.code ?? error?.name, status: error?.status, message: error?.message?.startsWith('The ChatGPT worker') ? error.message : undefined });
     return { status: 503, payload: { error: 'The ChatGPT worker is temporarily unavailable. Try again in a moment.' } };
   }
 }

@@ -1,15 +1,15 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { posix } from 'node:path';
+import { join, posix } from 'node:path';
 
 const sandboxName = 'printlab-chatgpt';
 let sourceFiles;
 function sources() {
   sourceFiles ??= Promise.all([
-    readFile(new URL('./worker.mjs', import.meta.url), 'utf8'),
-    readFile(new URL('./codex.mjs', import.meta.url), 'utf8'),
-    readFile(new URL('../src/spec.js', import.meta.url), 'utf8'),
-    readFile(new URL('../src/design-input.js', import.meta.url), 'utf8'),
+    readFile(join(process.cwd(), 'subscription/worker.mjs'), 'utf8'),
+    readFile(join(process.cwd(), 'subscription/codex.mjs'), 'utf8'),
+    readFile(join(process.cwd(), 'src/spec.js'), 'utf8'),
+    readFile(join(process.cwd(), 'src/design-input.js'), 'utf8'),
   ]).then(([worker, codex, spec, input]) => ({
     'worker.mjs': worker, 'codex.mjs': codex, 'spec.mjs': spec,
     'design-input.mjs': input.replace("'./spec.js'", "'./spec.mjs'"),
@@ -25,13 +25,24 @@ fi
 exec node "$2" serve "$1"
 `;
 
+async function atStage(stage, callback) {
+  try { return await callback(); }
+  catch (error) {
+    throw Object.assign(new Error('The ChatGPT worker could not start.'), {
+      stage,
+      code: error?.code ?? error?.name,
+      status: error?.status ?? error?.response?.status,
+    });
+  }
+}
+
 export async function sandboxRequest(action, input) {
-  const files = await sources();
-  const { Sandbox } = await import('@vercel/sandbox');
-  const sandbox = await Sandbox.getOrCreate({
+  const files = await atStage('read-source', sources);
+  const { Sandbox } = await atStage('load-sdk', () => import('@vercel/sandbox'));
+  const sandbox = await atStage('open-sandbox', () => Sandbox.getOrCreate({
     name: sandboxName, persistent: true, resources: { vcpus: 1 },
     timeout: 10 * 60_000, keepLastSnapshots: { count: 1 },
-  });
+  }));
   const root = posix.join(sandbox.cwd, '.printlab-codex');
   const version = createHash('sha256').update(JSON.stringify(files)).digest('hex').slice(0, 18);
   const sourceDir = posix.join(root, version);
@@ -50,7 +61,7 @@ export async function sandboxRequest(action, input) {
     ]);
     // Starting again is safe. A single OS lock protects the worker and its account.
     await sandbox.runCommand({
-      cmd: 'flock', args: ['-n', posix.join(root, 'worker.lock'), 'bash', '-c', installAndRun, 'printlab', root, script],
+      cmd: 'flock', args: ['-n', '-F', posix.join(root, 'worker.lock'), 'bash', '-c', installAndRun, 'printlab', root, script],
       detached: true,
     });
     const call = await sandbox.runCommand('node', [script, 'send', root, requestPath, responsePath]);
