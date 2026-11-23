@@ -3,6 +3,7 @@ import './style.css';
 import { axes, bracket, bracketDescription, checkPhotoScale, portablePrompt, validateDesign } from './spec.js';
 import { buildModel, encodeSTL } from './geometry.js';
 import { createViewer } from './viewer.js';
+import { subscriptionUI } from './subscription.js';
 
 const $ = id => document.getElementById(id);
 const storageKey = 'printlab-draft-v1';
@@ -24,6 +25,11 @@ function status(element, message = '', error = false) {
   element.hidden = !message;
   element.classList.toggle('error', error);
 }
+function showConnection(connected) {
+  $('open-settings').classList.toggle('connected', Boolean(connected || apiKey));
+}
+const subscription = subscriptionUI({ onChange: state => showConnection(state.connected) });
+
 function refreshControls() {
   const revising = mode === 'design';
   $('description-label').textContent = revising ? 'What would you like to change?' : 'What should it make?';
@@ -206,6 +212,7 @@ $('open-settings').addEventListener('click', () => {
   $('api-key').value = '';
   status($('settings-error'), apiKey ? 'An API key is connected for this tab.' : '');
   $('settings').showModal();
+  void subscription.open();
 });
 $('settings-form').addEventListener('submit', event => {
   event.preventDefault();
@@ -216,14 +223,14 @@ $('settings-form').addEventListener('submit', event => {
   }
   apiKey = value;
   $('api-key').value = '';
-  $('open-settings').classList.add('connected');
+  showConnection(subscription.connected());
   $('settings').close();
   status(formStatus, 'AI connected. Generate a model to use it.');
 });
 $('disconnect').addEventListener('click', () => {
   apiKey = '';
   $('api-key').value = '';
-  $('open-settings').classList.remove('connected');
+  showConnection(subscription.connected());
   $('settings').close();
   status(formStatus, 'AI disconnected.');
 });
@@ -237,20 +244,25 @@ $('design-form').addEventListener('submit', event => {
     status(formStatus, 'Describe a part or choose a reference photo.', true);
     return;
   }
-  if (!apiKey) {
+  const withSubscription = subscription.connected();
+  if (!apiKey && !withSubscription) {
     $('open-settings').click();
     return;
   }
   void runAction(formStatus, async () => {
     status(formStatus, input.previous ? 'Revising your model…' : 'Building your model…');
-    const response = await fetch('/api/design', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
-      body: JSON.stringify(input),
-    });
     let payload;
-    try { payload = await response.json(); } catch { throw new Error('The design service did not respond. Try again.'); }
-    if (!response.ok) throw new Error(payload.error || 'The design service could not complete the request.');
+    if (withSubscription) {
+      payload = await subscription.generate(input);
+    } else {
+      const response = await fetch('/api/design', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
+        body: JSON.stringify(input),
+      });
+      try { payload = await response.json(); } catch { throw new Error('The design service did not respond. Try again.'); }
+      if (!response.ok) throw new Error(payload.error || 'The design service could not complete the request.');
+    }
     await setModel(payload.design, 'design');
     status(formStatus, 'Model updated.');
     afterGeneration();

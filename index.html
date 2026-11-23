@@ -48,7 +48,7 @@
           <p class="status" role="status" id="form-status" hidden></p>
           <div class="brief-footer">
             <button type="button" class="link-button" id="load-sample">Try sample bracket</button>
-            <button type="button" class="link-button" id="open-bridge">Use ChatGPT</button>
+            <button type="button" class="link-button" id="open-bridge">Import from ChatGPT</button>
           </div>
         </form>
       </section>
@@ -93,17 +93,44 @@
   </main>
 
   <dialog id="settings">
-    <form id="settings-form">
-      <div class="dialog-heading"><h2>AI settings</h2><button type="button" class="button outline compact" data-close="settings">Close</button></div>
-      <p>Connect your OpenAI API key for generation inside PrintLab. The key stays in this tab and requests are billed to your API account.</p>
-      <label for="api-key">OpenAI API key</label>
-      <input type="password" id="api-key" placeholder="sk-…" autocomplete="off" spellcheck="false" autocapitalize="off">
-      <p id="settings-error" class="status" role="status" hidden></p>
-      <div class="dialog-actions">
-        <button type="submit" class="button primary">Connect AI</button>
-        <button type="button" class="link-button" id="disconnect">Disconnect</button>
+    <div class="dialog-heading"><h2>AI settings</h2><button type="button" class="button outline compact" data-close="settings">Close</button></div>
+    <section class="subscription-settings" aria-labelledby="subscription-title">
+      <h3 id="subscription-title">ChatGPT subscription</h3>
+      <p>Connect your ChatGPT account through Codex to generate and revise parts using your plan.</p>
+      <form id="owner-form" hidden>
+        <label for="owner-code">PrintLab owner code</label>
+        <input type="password" id="owner-code" autocomplete="off" spellcheck="false" autocapitalize="off">
+        <div class="dialog-actions"><button class="button outline" type="submit">Unlock this browser</button></div>
+      </form>
+      <div id="subscription-actions" class="dialog-actions" hidden>
+        <button class="button primary" id="subscription-connect" type="button">Connect ChatGPT</button>
+        <button class="button outline" id="subscription-disconnect" type="button" hidden>Disconnect ChatGPT</button>
+        <button class="link-button" id="subscription-lock" type="button">Lock browser</button>
       </div>
-    </form>
+      <div class="device-login" id="device-login" hidden>
+        <p>Enter this code on OpenAI’s sign-in page. Return here after approving access.</p>
+        <code id="device-code"></code>
+        <button class="link-button" id="copy-device-code" type="button">Copy code</button>
+        <div class="dialog-actions">
+          <a id="open-device-login" class="button primary" href="https://auth.openai.com/codex/device" target="_blank" rel="noopener noreferrer">Open OpenAI sign-in ↗</a>
+          <button class="link-button" id="cancel-device-login" type="button">Cancel</button>
+        </div>
+      </div>
+      <p class="status" id="subscription-status" role="status" hidden></p>
+    </section>
+    <details class="api-settings" id="api-settings">
+      <summary>Use an OpenAI API key instead</summary>
+      <form id="settings-form">
+        <p>The key stays in this tab. Requests through this option are billed to your API account.</p>
+        <label for="api-key">OpenAI API key</label>
+        <input type="password" id="api-key" placeholder="sk-…" autocomplete="off" spellcheck="false" autocapitalize="off">
+        <p id="settings-error" class="status" role="status" hidden></p>
+        <div class="dialog-actions">
+          <button type="submit" class="button outline">Connect API key</button>
+          <button type="button" class="link-button" id="disconnect">Remove API key</button>
+        </div>
+      </form>
+    </details>
   </dialog>
 
   <dialog id="bridge">

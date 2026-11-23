@@ -1,25 +1,18 @@
 import { checkPhotoScale, designInstructions, designPrompt, designSchema, validateDesign } from '../src/spec.js';
 
+import { readDesignInput } from '../src/design-input.js';
+
 export async function createDesign(body, authorization, send = fetch) {
   const key = authorization?.match(/^Bearer (sk-[\w-]{12,300})$/)?.[1];
   if (!key) return [401, { error: 'Connect an OpenAI API key to generate a design here.' }];
-  const { description = '', measurement = '', image = null, previous = null } = body ?? {};
-  if (typeof description !== 'string' || description.length > 4000 ||
-      typeof measurement !== 'string' || measurement.length > 500 ||
-      (!description.trim() && !image)) {
-    return [400, { error: 'Add a description or a reference photo. The description can be up to 4,000 characters.' }];
-  }
-  if (image !== null && (typeof image !== 'string' || image.length > 2_800_000 ||
-      !/^data:image\/(jpeg|png|webp);base64,[a-z0-9+/]+={0,2}$/i.test(image))) {
-    return [400, { error: 'Choose a JPEG, PNG, or WebP reference photo under 2 MB.' }];
-  }
-  let current;
+  let input;
   try {
-    current = previous ? validateDesign(previous) : null;
-  } catch {
-    return [400, { error: 'The existing design could not be read. Start a new design or load another revision.' }];
+    input = readDesignInput(body);
+  } catch (error) {
+    return [400, { error: error.message }];
   }
-  const content = [{ type: 'input_text', text: designPrompt({ description, measurement, image, previous: current }) }];
+  const { image } = input;
+  const content = [{ type: 'input_text', text: designPrompt(input) }];
   if (image) content.push({ type: 'input_image', image_url: image, detail: 'high' });
 
   try {
@@ -44,7 +37,7 @@ export async function createDesign(body, authorization, send = fetch) {
       return [422, { error: 'The model could not complete that design. Try a simpler shape or add measurements.' }];
     }
     const design = validateDesign(JSON.parse(message.text));
-    return [200, { design: checkPhotoScale(design, { description, measurement, image, previous: current }) }];
+    return [200, { design: checkPhotoScale(design, input) }];
   } catch {
     return [502, { error: 'The AI response was unavailable or invalid. Try again with a shorter description.' }];
   }

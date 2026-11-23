@@ -137,3 +137,15 @@ dialog p { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 12px
   .viewport { height: clamp(275px, 78vw, 420px); }
   textarea, input[type="text"], input[type="password"], input[type="number"] { font-size: 16px; }
 }
+
+.subscription-settings { margin-top: 17px; }
+.subscription-settings h3 { margin: 0; font-size: 15px; }
+.subscription-settings p { margin: 5px 0 12px; }
+.subscription-settings .status { margin: 11px 0 0; }
+.subscription-settings #owner-form .dialog-actions { margin: 9px 0 0; }
+.device-login { margin-top: 13px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #f8faf4; }
+.device-login p { margin-top: 0; }
+.device-login code { display: inline-block; padding: 5px 8px; margin-right: 8px; background: #ecf1e5; border-radius: 4px; font: 700 17px var(--mono); }
+.device-login a { text-decoration: none; }
+.api-settings { border-top: 1px solid var(--line); margin-top: 17px; padding-top: 13px; }
+.api-settings summary { cursor: pointer; font-size: 13px; font-weight: 650; }
